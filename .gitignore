@@ -30,6 +30,11 @@ RELEASE.md
 
 # DSH 技能注册副本（仅本机保留，不推送远程仓库；根 SKILL.md 已在仓库）
 .dsh/skills/
+# DSH 本机安装数据（profiles/manager/settings 等，仅本机保留）
+.dsh/
+
+# 引擎临时渲染目录（docx_to_image 等运行时产物，仅本机）
+engine/tmp/
 
 # 测试与临时产物
 *_optimized.docx
