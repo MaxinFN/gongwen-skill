@@ -577,6 +577,9 @@ def _run_tracked_mode(args, changes, style_name, style_prompt, content_rules, do
             authors = sorted({s.author for s in suggestions})
             print(f"  审阅者: {', '.join(authors)}（可按审阅者筛选）")
         # S2 修复：审稿角色显示映射（默认 6 角色不再误判为 3 角色）
+        # V2.14 修复：reviewers_count 此前从未赋值（O10 重构遗留 NameError，
+        # 导致 tracked 模式生成文档后 rc=1）——从 args.reviewers 取（full 默认 6、quick 3）
+        reviewers_count = int(getattr(args, 'reviewers', 6) or 6)
         _role_display = {
             3: "精简版(3角色)",
             5: "完整版(5角色)",

@@ -162,6 +162,9 @@ def cmd_check(args):
     if args.severity:
         issues = [i for i in issues if i.severity == args.severity]
 
+    # V2.14：未知公文类型显式警告（拼错类型不再静默回退 common）
+    _warn_unknown_doc_type(args.doc_type)
+
     if args.json:
         results = [{
             "severity": i.severity, "rule_id": i.rule_id, "name": i.name,
@@ -199,6 +202,19 @@ def _print_read_visibility_hints(model):
               f"检查基于当前可见内容，建议先接受/拒绝修订后再处理")
 
 
+def _warn_unknown_doc_type(doc_type):
+    """V2.14：未知公文类型显式警告（此前静默回退 common 规则，拼错类型难发现）。"""
+    if not doc_type:
+        return None
+    from engine.core.rules.loader import list_available_types
+    known = list_available_types()
+    if doc_type not in known:
+        print(f"  ⚠️ 警告: 未知公文类型「{doc_type}」，已回退使用通用规则"
+              f"（python -m gongwen list-types 查看 {len(known)} 类）")
+        return doc_type
+    return None
+
+
 def cmd_optimize(args):
     """检查 + 修复 + 生成（格式优化，不改内容）。
 
@@ -222,6 +238,9 @@ def cmd_optimize(args):
 
     # 确定文档类型（共享辅助函数，优先 -t 参数，其次文件名推断）
     doc_type, type_source = _detect_doc_type(input_path, args.doc_type)
+
+    # V2.14：未知公文类型显式警告（拼错类型不再静默回退 common）
+    _warn_unknown_doc_type(doc_type)
 
     # 解析文档并检查
     model = parse_docx(str(input_path))
