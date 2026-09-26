@@ -501,6 +501,16 @@ check_rules:
     expected: true
     message: "整段加粗不符合公文规范，通常仅首句或点题词需要加粗"
 
+  # --- 文本框内容检查 (CHK-TBX001, V2.14) ---
+  # 公文红头/发文字号常承载于文本框（w:txbxContent）；文本框存在但内容为空
+  # 说明红头区域有缺失。仅"检测到文本框"时触发，无文本框的文档不报。
+  - id: CHK-TBX001
+    name: "文本框内容检查"
+    severity: P2
+    field: header.textbox
+    expected: "文本框内容非空"
+    message: "检测到文本框但内容为空（红头/发文字号可能在文本框中缺失）"
+
   # --- 主送机关格式检查 (CHK-C026) ---
   - id: CHK-C026
     name: "主送机关格式检查"

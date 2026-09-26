@@ -582,17 +582,37 @@ def parse_docx(file_path: Path | str) -> DocumentModel:
     logger.info(f"Parsed: {len(paragraphs)} paragraphs, {len(tables)} tables, "
                 f"{len(headers)} headers, {len(footers)} footers")
 
-    # I7: 文本框（红头区域）内容暴露给管线——挂载为模型非 Pydantic 属性
+    # I7/V2.14: 文本框（红头区域）内容正式入模型——此前仅挂非 Pydantic 属性，
+    # JSON 输出与 check/optimize 均不可见（静默丢失）；现纳入 DocumentModel.textboxes
+    from engine.core.document.models import TextBox
     try:
         textboxes = ooxml.parse_textboxes(str(file_path))
+        model.textboxes = [
+            TextBox(index=tb.index, text=tb.text, paragraphs=tb.paragraphs)
+            for tb in textboxes
+        ]
+        # 向后兼容 alias：仍挂到非标准属性（防外部模块引用）
+        object.__setattr__(model, '_textboxes', [tb.text for tb in textboxes])
+        object.__setattr__(model, '_textbox_paragraphs', [tb.paragraphs for tb in textboxes])
         if textboxes:
-            object.__setattr__(model, '_textboxes', [tb.text for tb in textboxes])
-            object.__setattr__(model, '_textbox_paragraphs', [tb.paragraphs for tb in textboxes])
             logger.info(f"Textboxes extracted: {len(textboxes)} (红头/文本框区域)")
-        else:
-            object.__setattr__(model, '_textboxes', [])
     except Exception as e:
         logger.debug(f"Textbox extraction skipped: {e}")
+        object.__setattr__(model, '_textboxes', [])
+
+    # V2.14: 修订追踪摘要（w:ins/w:del）——此前 python-docx 层静默丢弃
+    try:
+        rev = ooxml.parse_revisions(str(file_path))
+        model.revisions = type(model.revisions)(
+            insert_count=rev['insert_count'], delete_count=rev['delete_count'],
+            authors=rev['authors'],
+            inserted_snippets=rev['inserted_snippets'],
+            deleted_snippets=rev['deleted_snippets'],
+        )
+        if model.revisions.has_revisions:
+            logger.info(f"Revisions detected: {rev['insert_count']} ins / {rev['delete_count']} del")
+    except Exception as e:
+        logger.debug(f"Revision parse skipped: {e}")
 
     # I7: 段落索引映射挂载（供批注锚定等下游使用）
     object.__setattr__(model, '_para_index_map', para_index_map)

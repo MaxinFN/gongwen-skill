@@ -6,6 +6,12 @@
 
 ## Unreleased
 
+### Added
+- **解析读取可见性（V2.14）**：文本框内容（`w:txbxContent`，公文红头/发文字号常承载于此）与修订追踪摘要（`w:ins`/`w:del`）正式纳入 DocumentModel（`textboxes` / `revisions` 字段），`parse --json` 结构化输出——此前两者在解析层静默丢失（文本框仅挂非 Pydantic 属性、修订因 python-docx 高层 API 不读 `w:ins` 包裹 run 而整体丢失）
+- **文本框内容检查规则 CHK-TBX001**：检测到文本框但内容为空时提示（红头/发文字号可能缺失）；无文本框的文档不触发，避免误报
+- **check/optimize 读取可见性提示**：文档含修订（含作者与增删数）或存在空文本框时，非 JSON 路径显式打印提示，不再静默忽略；`optimize --json` 新增 `textboxes` / `revisions` 字段供 Agent 感知解析降级
+- **新增测试 `tests/test_read_visibility.py`**（6 用例）：文本框入模型、修订摘要、JSON 序列化、普通文档默认值、提示输出、CHK-TBX001 触发
+
 ### Fixed
 - **npm peer 依赖解析失败（P1）**：`@deepseek-ai/dsh-tools` peer 下限由 `>=0.1.0` 修正为 `>=0.1.5-rc.3`。根因：该包在 npm 上仅发布 rc/alpha 预发布版本（latest tag = `0.0.1-rc.1`），而 npm semver 的预发布 tuple 规则使 `>=0.1.0`（无预发布比较器）无法匹配任何版本，导致 pnpm 安装报 `ERR_PNPM_NO_MATCHING_VERSION`（GitHub issue #1）；现对齐官方宿主配套版本（`@deepseek-ai/dsh-base ^0.1.5-rc.3` 传递提供的 dsh-tools）
 - **SKILL.md 标题与对外展示名统一**：H1 由「公文文档格式化 Skill（GB/T 9704）」改为「公文全流程处理专家（GB/T 9704）」，三副本（根 / `.dsh/skills/gongwen-skill/SKILL.md` / `.dsh/skills/gongwen-skill.md`）已同步

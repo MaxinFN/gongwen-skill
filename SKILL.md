@@ -900,7 +900,7 @@ python -m gongwen fix-common 文件.docx -o 成品.docx
 
 | 命令 | 用途 | 最小用法 |
 |------|------|---------|
-| `parse` | .docx → 结构化 DocumentModel JSON | `python -m gongwen parse 公文.docx` |
+| `parse` | .docx → 结构化 DocumentModel JSON（含文本框/修订摘要） | `python -m gongwen parse 公文.docx` |
 | `check` | 按国标检查格式（只读，分级 P0/P1/P2） | `python -m gongwen check 公文.docx -t notice` |
 | `audit` | 审计文档：检查删除线/加粗/AI 声明等痕迹 | `python -m gongwen audit 公文.docx` |
 

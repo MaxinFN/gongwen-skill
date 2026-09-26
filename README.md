@@ -30,7 +30,7 @@ Licensed under the MIT License. See the LICENSE file for details.
 |------|------|------|
 | 📋 列类型 | `list-types` | 列出 25 种支持的公文类型（新增主持词 host_speech；含新闻稿/讲话稿） |
 | 🏗️ 模板生成 | `template` | 按类型生成 GB/T 9704 标准空白模板 |
-| 🔍 解析 | `parse` | `.docx` → 结构化 DocumentModel |
+| 🔍 解析 | `parse` | `.docx` → 结构化 DocumentModel（含文本框/修订摘要） |
 | ✅ 格式检查 | `check` | 按国标检查，分级 P0/P1/P2（只读） |
 | 🔧 格式修复 | `optimize` | 自动修复字体/字号/行距/页边距，输出合规文档；`--verify` 单命令闭环自动复查、P0 存在时退出码非 0；`--json` 结构化输出 |
 | ✍️ **内容优化** | **`optimize-content`** | 内容润色：默认 **Word 原生修订+批注**（审阅面板逐条接受/拒绝），可选行内差异对比版；`--precheck` 预检 changes 与原文一致性、`--preset quick/full/review` 参数收敛 |

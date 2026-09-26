@@ -137,7 +137,12 @@ def cmd_parse(args):
         # --json：强制完整 JSON 到 stdout（即使指定了 -o），Agent 可统一解析
         print(text)
     elif args.output:
-        print(f"已解析: {args.output} ({len(model.paragraphs)} 段落, {len(model.tables)} 表格)")
+        parts = [f"{len(model.paragraphs)} 段落", f"{len(model.tables)} 表格"]
+        if model.textboxes:
+            parts.append(f"{len(model.textboxes)} 文本框")
+        if model.revisions.has_revisions:
+            parts.append(f"修订 {model.revisions.insert_count}+/{model.revisions.delete_count}-")
+        print(f"已解析: {args.output} ({', '.join(parts)})")
     else:
         print(text)
 
@@ -173,6 +178,25 @@ def cmd_check(args):
         for i in issues:
             print(f"  [{i.severity}] {i.rule_id}: {i.name} @ {i.location}")
             print(f"       实际: {i.original_text}  → 期望: {i.suggested_fix}")
+        # V2.14：读取可见性提示——文本框/修订不静默忽略
+        _print_read_visibility_hints(model)
+
+
+def _print_read_visibility_hints(model):
+    """V2.14：解析层读取可见性提示。
+
+    文本框（红头/发文字号）与修订（w:ins/w:del）是公文流转的高频信息载体，
+    此前在解析层静默丢失；现在解析可见，这里向用户显式告知降级/注意事项。
+    """
+    if model.textboxes:
+        empty = [tb for tb in model.textboxes if not (tb.text or '').strip()]
+        if empty:
+            print(f"  [提示] 检测到 {len(empty)} 个空文本框（红头/发文字号可能缺失）")
+    if model.revisions.has_revisions:
+        authors = '、'.join(model.revisions.authors) or '未知'
+        print(f"  [提示] 文档含修订 {model.revisions.insert_count} 处新增 / "
+              f"{model.revisions.delete_count} 处删除（作者: {authors}）；"
+              f"检查基于当前可见内容，建议先接受/拒绝修订后再处理")
 
 
 def cmd_optimize(args):
@@ -232,6 +256,14 @@ def cmd_optimize(args):
         "verify_executed": False, "verify_passed": False,
         "verify_p0": None, "verify_p1": None, "verify_p2": None,
         "verify_error": None,
+        # V2.14：读取可见性（文本框/修订）——供 Agent 感知解析降级
+        "textboxes": len(model.textboxes),
+        "revisions": ({
+            "has": True,
+            "insert": model.revisions.insert_count,
+            "delete": model.revisions.delete_count,
+            "authors": model.revisions.authors,
+        } if model.revisions.has_revisions else None),
     }
 
     # === 预览信息（--json 时不打印人类文本）===
@@ -249,6 +281,8 @@ def cmd_optimize(args):
                     print(f"    - {i.name} @ {i.location}")
         if layout_parts:
             print(f"🎨 版式注入: {', '.join(layout_parts)}")
+        # V2.14：读取可见性提示（文本框/修订不静默忽略）
+        _print_read_visibility_hints(model)
 
     if not args.apply:
         if not is_json:

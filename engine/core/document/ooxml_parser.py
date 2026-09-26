@@ -156,3 +156,42 @@ class OOXMLParser:
     def para_text_from_element(p_elem) -> str:
         """从 <w:p> 节点提取文本（NS4 修复：用 iter 遍历后代，与文本框解析一致）。"""
         return ''.join(t.text or '' for t in p_elem.iter(f'{{{W}}}t'))
+
+    def parse_revisions(self, docx_path: str | Path) -> Dict[str, Any]:
+        """
+        解析文档修订追踪（<w:ins> 新增 / <w:del> 删除）摘要。
+
+        V2.14：python-docx 高层 API 不读 w:ins 包裹的 run，导致修订内容在
+        解析层静默丢失——此处用 OOXML 树直接统计，让流转中的草稿修订可见。
+
+        Returns:
+            dict: {insert_count, delete_count, authors[], inserted_snippets[], deleted_snippets[]}
+        """
+        root = self._load_document_xml(docx_path)
+        authors: set[str] = set()
+        inserted: list[str] = []
+        deleted: list[str] = []
+
+        for ins in root.iter(f'{{{W}}}ins'):
+            a = ins.get(f'{{{W}}}author')
+            if a:
+                authors.add(a)
+            txt = ''.join(t.text or '' for t in ins.iter(f'{{{W}}}t'))
+            if txt.strip():
+                inserted.append(txt.strip())
+
+        for dl in root.iter(f'{{{W}}}del'):
+            a = dl.get(f'{{{W}}}author')
+            if a:
+                authors.add(a)
+            txt = ''.join(t.text or '' for t in dl.iter(f'{{{W}}}delText'))
+            if txt.strip():
+                deleted.append(txt.strip())
+
+        return {
+            'insert_count': len(inserted),
+            'delete_count': len(deleted),
+            'authors': sorted(authors),
+            'inserted_snippets': inserted[:5],
+            'deleted_snippets': deleted[:5],
+        }

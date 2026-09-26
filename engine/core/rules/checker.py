@@ -861,7 +861,20 @@ def _check_header_field(model, rule_id: str, severity: str, name: str,
     field_name = field_path.split(".", 1)[1] if "." in field_path else ""
 
     try:
-        if field_name == "doc_number":
+        if field_name == "textbox":
+            # V2.14：文本框内容可见性（CHK-TBX001）——红头/发文字号常承载于文本框；
+            # 文本框存在但为空 → 提示缺失；无文本框 → 不报（避免误报）
+            tb_list = getattr(model, 'textboxes', None) or []
+            empty = [tb for tb in tb_list if not (tb.text or '').strip()]
+            if tb_list and empty:
+                issues.append(CheckIssue(
+                    rule_id=rule_id, check_type="content", severity=severity,
+                    name=name, location=f"textbox:{empty[0].index}",
+                    original_text="",
+                    suggested_fix=expected,
+                    reason=message or f"检测到 {len(empty)} 个空文本框（红头/发文字号可能缺失）",
+                ))
+        elif field_name == "doc_number":
             # 令号模式：〔2026〕1号 / 第1号 / （2026）1号 / 2026年1号 等
             all_text = ''.join((getattr(p, 'text', '') or '') for p in model.paragraphs)
             has_doc_number = re.search(

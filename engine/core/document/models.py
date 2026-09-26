@@ -123,6 +123,32 @@ class HeaderFooter(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+#  Read-visibility structures（V2.14：读取可见性）
+#  公文红头/发文字号常承载于文本框（<w:txbxContent>），修订（<w:ins>/<w:del>）
+#  是流转中的草稿核心信息——两者此前在解析层静默丢失，现正式纳入模型。
+# ---------------------------------------------------------------------------
+
+class TextBox(BaseModel):
+    """文本框内容（红头、发文字号等常承载于文本框）。"""
+    index: int = 0
+    text: str = ""
+    paragraphs: list[str] = Field(default_factory=list)
+
+
+class RevisionInfo(BaseModel):
+    """文档修订追踪摘要（w:ins 新增 / w:del 删除）。"""
+    insert_count: int = 0
+    delete_count: int = 0
+    authors: list[str] = Field(default_factory=list)
+    inserted_snippets: list[str] = Field(default_factory=list)   # 新增内容片段（前 5 条）
+    deleted_snippets: list[str] = Field(default_factory=list)    # 删除内容片段（前 5 条）
+
+    @property
+    def has_revisions(self) -> bool:
+        return self.insert_count > 0 or self.delete_count > 0
+
+
+# ---------------------------------------------------------------------------
 #  Page setup
 # ---------------------------------------------------------------------------
 
@@ -169,6 +195,10 @@ class DocumentModel(BaseModel):
     tables: list[Table] = Field(default_factory=list)
     headers: list[HeaderFooter] = Field(default_factory=list)
     footers: list[HeaderFooter] = Field(default_factory=list)
+
+    # V2.14：读取可见性——文本框内容与修订摘要（此前静默丢失）
+    textboxes: list[TextBox] = Field(default_factory=list)
+    revisions: RevisionInfo = Field(default_factory=RevisionInfo)
 
     # Source file info
     filename: Optional[str] = Field(default=None, exclude=True)
