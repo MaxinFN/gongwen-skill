@@ -19,7 +19,7 @@ metadata:
   Licensed under the MIT License. See the LICENSE file for details.
 -->
 
-# 公文文档格式化 Skill（GB/T 9704）
+# 公文全流程处理专家（GB/T 9704）
 
 ---
 

@@ -4,6 +4,16 @@
   Licensed under the MIT License. See the LICENSE file for details.
 -->
 
+## Unreleased
+
+### Fixed
+- **npm peer 依赖解析失败（P1）**：`@deepseek-ai/dsh-tools` peer 下限由 `>=0.1.0` 修正为 `>=0.1.5-rc.3`。根因：该包在 npm 上仅发布 rc/alpha 预发布版本（latest tag = `0.0.1-rc.1`），而 npm semver 的预发布 tuple 规则使 `>=0.1.0`（无预发布比较器）无法匹配任何版本，导致 pnpm 安装报 `ERR_PNPM_NO_MATCHING_VERSION`（GitHub issue #1）；现对齐官方宿主配套版本（`@deepseek-ai/dsh-base ^0.1.5-rc.3` 传递提供的 dsh-tools）
+- **SKILL.md 标题与对外展示名统一**：H1 由「公文文档格式化 Skill（GB/T 9704）」改为「公文全流程处理专家（GB/T 9704）」，三副本（根 / `.dsh/skills/gongwen-skill/SKILL.md` / `.dsh/skills/gongwen-skill.md`）已同步
+- **AGENTS.md 尾部重复行清理**：删除重复的「内容由AI生成，仅供参考」一行
+
+### Changed
+- **README 下载量徽章动态化**：`Downloads-0` 硬编码徽章改为 PyPI 动态下载量徽章（`img.shields.io/pypi/dm/gongwen-skill`）
+
 ## v2.13.0 (2026-09-11)
 
 ### Added

@@ -28,6 +28,9 @@ RELEASE.md
 # 本地调研产物/临时脚本（仅本地保留，不推送远程仓库）
 .research/
 
+# 运行时工作区数据（WorkBuddy 记忆/会话数据，仅本机保留）
+.workbuddy/
+
 # DSH 技能注册副本（仅本机保留，不推送远程仓库；根 SKILL.md 已在仓库）
 .dsh/skills/
 # DSH 本机安装数据（profiles/manager/settings 等，仅本机保留）

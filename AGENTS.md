@@ -118,5 +118,3 @@ gongwen-skill/
 ## 6. 许可
 
 MIT License，详见 [LICENSE](./LICENSE)。
-*（内容由AI生成，仅供参考）*
-*（内容由AI生成，仅供参考）*

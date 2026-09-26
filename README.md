@@ -18,7 +18,7 @@ Licensed under the MIT License. See the LICENSE file for details.
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
 ![GB/T 9704](https://img.shields.io/badge/standard-GB%2FT%209704-red.svg)
 ![DSH](https://img.shields.io/badge/DSH-Compatible-brightgreen)
-![Downloads](https://img.shields.io/badge/Downloads-0-blue)
+![Downloads](https://img.shields.io/pypi/dm/gongwen-skill)
 
 本 Skill 源自开源桌面项目 [AI 公文智能优化助手](https://github.com/linhut/document-ai-assistant)，将其核心格式引擎抽取、剥离桌面端/数据库依赖后独立发行，支持公文的**模板建立、解析、规则检查、自动修复、内容优化、Markdown 转公文**全流程能力。同时原生集成 **DeepSeek Harness (DSH)** 技能系统，支持 DSH Agent 自动发现与加载。
 
