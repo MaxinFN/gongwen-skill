@@ -4,6 +4,21 @@
   Licensed under the MIT License. See the LICENSE file for details.
 -->
 
+## v2.15.0 (2026-10-01)
+
+### Fixed
+- **npm peer 依赖在 DSH 0.2.0-rc.2 宿主上安装失败（P1，GitHub issue #2「0.2.0 rc-2装上就报错」）**：DSH 宿主升级到 0.2.0-rc.2 线后，其捆绑的 `@deepseek-ai/dsh-tools@0.2.0-rc.2` 与 `@deepseek-ai/dsh-client-ui-settings-plugins@0.2.0-rc.2` 均不满足 v2.14.0 声明的 peer 范围（`>=0.1.5-rc.3` / `>=0.1.2-rc.1`）。根因是 node-semver 的预发布逐线放行规则：范围里带预发布版本（如 `0.1.5-rc.3`）的比较器，只允许**相同 [major,minor,patch] 元组**的预发布版本参与匹配，0.2.0 线因此整体不可达 → pnpm 解析 peer 报 `ERR_PNPM_NO_MATCHING_VERSION`（与 issue #1 同根，属宿主升线后的复发性问题）
+  - `@deepseek-ai/dsh-tools` peer 改为多线锚定：`>=0.1.2-alpha.1 || >=0.1.5-alpha.1 || >=0.1.7-alpha.1 || >=0.2.0-0`（实测覆盖 0.1.2/0.1.5/0.1.7/0.2.0 全部已发布预发布线，与 npm 全部 30 个已发布版本匹配 16 个关键线）
+  - `@deepseek-ai/dsh-client-ui-settings-plugins` peer 改为：`>=0.1.2-rc.1 || >=0.1.5-rc.1 || >=0.2.0-0`
+  - **新增 `peerDependenciesMeta` 将 4 个 `@deepseek-ai/*` peer 全部标为 `optional: true`**：DSH 桌面端市场安装后这些宿主单例原就会被移除、运行时统一走宿主共享副本（issue #1 已核实的安装模型），optional 化后安装期不再因 peer 版本线漂移失败，未来宿主再升线也不受影响；运行时 import 仍解析到宿主提供的副本（版本由宿主保证）
+  - `doctor`（O2 peer 检查）版本解析升级：`_parse_version_tuple` 支持 `-alpha.N` / `-0` 预发布标记，新增 `_peer_branch_minima` 按 `||` OR 分支保守判定（安装版本 ≥ 任一分支下限即满足），避免对多线范围误报
+- **doctor O1 宿主版本检查兼容 0.2.0 线**：`_parse_version_tuple` 预发布段由仅识别 `-rc.N` 扩展为通用 `-<tag>N`（rc/alpha/裸数字），0.2.0-rc.2 正确判定 ≥ 0.1.2-rc.1，不再误报
+
+### Notes
+- 本版为 DSH 插件安装兼容性修复，CLI 功能无变化；纯 CLI 用户不受影响
+
+---
+
 ## v2.14.0 (2026-09-26)
 
 ### Added

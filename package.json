@@ -1,6 +1,6 @@
 {
   "name": "gongwen-skill",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "description": "公文全流程处理专家 - GB/T 9704 格式检查/修复/内容优化/模板生成/版式注入",
   "type": "module",
   "main": "dsh/index.js",
@@ -46,9 +46,15 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4",
-    "@deepseek-ai/dsh-tools": ">=0.1.5-rc.3",
+    "@deepseek-ai/dsh-tools": ">=0.1.2-alpha.1 || >=0.1.5-alpha.1 || >=0.1.7-alpha.1 || >=0.2.0-0",
     "@deepseek-ai/schemastery": ">=3.18.0",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": ">=0.1.2-rc.1"
+    "@deepseek-ai/dsh-client-ui-settings-plugins": ">=0.1.2-rc.1 || >=0.1.5-rc.1 || >=0.2.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": { "optional": true },
+    "@deepseek-ai/dsh-tools": { "optional": true },
+    "@deepseek-ai/schemastery": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-settings-plugins": { "optional": true }
   },
   "scripts": {
     "prepack": "node scripts/clean-cache.js",

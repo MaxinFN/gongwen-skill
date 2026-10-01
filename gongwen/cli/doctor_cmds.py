@@ -717,17 +717,42 @@ def _check_display_name_consistency() -> dict:
 
 
 def _parse_version_tuple(v: str):
-    """解析 1.2.3 / 4 / 3.18.0 / 0.1.2-rc.1 → 可比较元组（rc.N 视为预发布）。
+    """解析 1.2.3 / 4 / 3.18.0 / 0.1.2-rc.1 / 0.1.2-alpha.1 / 0.1.2-0 → 可比较元组。
 
-    rc.N 预发布 < 同版本正式版（rc 取有限数，正式版取 inf）。
+    rc.N / alpha.N / 预发布 0 < 同版本正式版（预发布取末尾数字段，正式版取 inf）。
     无法解析返回 None（调用方按不满足处理，保守）。
     """
     import re as _re
-    m = _re.match(r"^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-rc\.(\d+))?$", v.strip())
+    m = _re.match(r"^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Za-z.]+))?$", v.strip())
     if not m:
         return None
-    return (int(m.group(1)), int(m.group(2) or 0), int(m.group(3) or 0),
-            int(m.group(4)) if m.group(4) else float("inf"))
+    major, minor, patch = int(m.group(1)), int(m.group(2) or 0), int(m.group(3) or 0)
+    pre = m.group(4)
+    if pre is None:
+        return (major, minor, patch, float("inf"))
+    # 预发布取末尾数字段近似（rc.1→1、alpha.1→1、0→0、裸 rc→0），
+    # 仅用于 doctor 下限比较，不追求与 node-semver 逐线规则完全一致
+    seg = pre.split(".")[-1]
+    n = int(seg) if seg.isdigit() else 0
+    return (major, minor, patch, n)
+
+
+def _peer_branch_minima(range_str: str) -> list:
+    """把 peer 范围（可能含 `||` OR 多线）拆成各分支版本下限元组列表。
+
+    背景：DSH 宿主按 0.1.2 / 0.1.5 / 0.1.7 / 0.2.0 等预发布线迭代，
+    peer 范围需多线锚定（npm semver 预发布逐线放行），doctor 据此做保守检查：
+    安装版本 ≥ 任一分支下限即视为满足（比 node-semver 略宽松，宁可少报）。
+    """
+    out = []
+    for branch in (range_str or "").split("||"):
+        b = branch.strip().lstrip(">=").strip()
+        if not b:
+            continue
+        t = _parse_version_tuple(b)
+        if t is not None:
+            out.append(t)
+    return out
 
 
 def _dsh_profiles() -> list:
@@ -828,7 +853,7 @@ def _check_dsh_peer_deps() -> dict:
     problems = []
     checked = 0
     for peer, minimum in peers.items():
-        min_key = _parse_version_tuple(minimum.lstrip(">=").strip())
+        branch_mins = _peer_branch_minima(minimum)
         installed = []
         for nm in nm_dirs:
             pkg = nm / peer / "package.json"
@@ -844,7 +869,9 @@ def _check_dsh_peer_deps() -> dict:
         checked += 1
         for profile, ver in installed:
             key = _parse_version_tuple(ver)
-            if key is None or key < min_key:
+            # 满足 = 不低于任一分支下限（多线 OR 保守判定）
+            ok = key is not None and any(key >= mn for mn in branch_mins)
+            if not ok:
                 problems.append(f"{peer}: {profile}={ver or '未知'}（要求 {minimum}）")
     if problems:
         return {
